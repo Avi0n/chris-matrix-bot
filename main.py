@@ -50,7 +50,7 @@ def scrape_songlink(url):
                 link_found = True
                 return link.get('href')
         print("Couldn't find a YouTube/Soundcloud URL to download from")
-
+        return False
 
 # Respond to /start
 def start(bot, update):
@@ -124,24 +124,29 @@ def check_message_for_link(bot, update):
     else:
         print('Not a song.link URL, continuing to download song.')
 
-    download_audio(media_url)
+    if media_url is False:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Couldn't find a YouTube/Soundcloud URL to download from.")
+    else:
+        download_audio(media_url)
 
     # Try to send telegram message with audio file. If error, try again in 5 sec.
-    i = 0
-    while i < 5:
-        i += 1
-        try:
-            bot.send_audio(chat_id=update.message.chat_id, audio=open(
-                           './song.mp3', 'rb'), title=mp3_name, timeout=20)
-            print('Telegram message sent!')
-            break
-        except Exception as e:
-            print('Exception: ' + e + '. Trying again in 5 seconds')
-            sleep(5)
-            continue
+    if media_url is True:
+        i = 0
+        while i < 5:
+            i += 1
+            try:
+                bot.send_audio(chat_id=update.message.chat_id, audio=open(
+                               './song.mp3', 'rb'), title=mp3_name, timeout=20)
+                print('Telegram message sent!')
+                break
+            except Exception as e:
+                print('Exception: ' + e + '. Trying again in 5 seconds')
+                sleep(5)
+                continue
 
-    # All done! Delete audio file.
-    delete_audio()
+        # All done! Delete audio file.
+        delete_audio()
 
 
 class FilterLinks(BaseFilter):
@@ -150,6 +155,7 @@ class FilterLinks(BaseFilter):
             'youtube.com',
             'youtu.be',
             'soundcloud.com',
+            'coub.com',
             'song.link'
         ]
         media_url=message.text
