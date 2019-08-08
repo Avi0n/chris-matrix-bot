@@ -16,7 +16,7 @@ mp3_name = ''
 
 # Initialize logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ def check_message_for_link(bot, update):
         download_audio(media_url)
 
     # Try to send telegram message with audio file. If error, try again in 5 sec.
-    if media_url is True:
+    if not media_url is False:
         i = 0
         while i < 5:
             i += 1
