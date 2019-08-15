@@ -13,6 +13,7 @@ import requests
 load_dotenv()
 
 mp3_name = ''
+songlink_url = ''
 
 # Initialize logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -28,12 +29,14 @@ def error(update, context):
 
 # Find YouTube/Soundcloud link from song.link URLs
 def scrape_songlink(url):
-    url = url
+    global songlink_url
 
     headers = {'User-Agent': 'Mozilla/5.0'}
 
     # Returns a requests.models.Response object
     page = requests.get(url, headers=headers)
+
+    songlink_url = url
 
     soup = BeautifulSoup(page.text, 'html.parser')
 
@@ -118,27 +121,36 @@ def check_message_for_link(bot, update):
         media_url=update.message.text
         print(media_url)
 
-    if 'song.link' in update.message.text:
+    if 'spotify.com' in update.message.text:
+        print('song.linkifying spotify link')
+        media_url=scrape_songlink('https://song.link/' + update.message.text)
+    elif 'song.link' in update.message.text:
         # Grab YouTube/Soundcloud URL from song.link URL
         media_url=scrape_songlink(update.message.text)
     else:
-        print('Not a song.link URL, continuing to download song.')
+        print('Not a song.link or spotify URL, continuing to download song.')
 
     download_audio(media_url)
 
     # Try to send telegram message with audio file. If error, try again in 5 sec.
     i = 0
+    error = ''
     while i < 5:
         i += 1
         try:
             bot.send_audio(chat_id=update.message.chat_id, audio=open(
-                           './song.mp3', 'rb'), title=mp3_name, timeout=20)
+                           './song.mp3', 'rb'), title=mp3_name, disable_notification=True, 
+                           caption='[Song.link URL](' + songlink_url + ')', 
+                           parse_mode='Markdown', timeout=20)
             print('Telegram message sent!')
             break
         except Exception as e:
-            print('Exception: ' + e + '. Trying again in 5 seconds')
+            error = str(e)
+            print('Exception: ' + str(e) + '. Trying again in 5 seconds')
             sleep(5)
             continue
+    if i is 5:
+        bot.send_message(chat_id=update.message.chat_id, text=error, disable_notification=True)
 
     # All done! Delete audio file.
     delete_audio()
@@ -150,12 +162,13 @@ class FilterLinks(BaseFilter):
             'youtube.com',
             'youtu.be',
             'soundcloud.com',
+            'spotify.com',
             'song.link'
         ]
         media_url=message.text
 
         for i in accepted_links:
-            if i and 'http' in media_url:
+            if i in media_url:
                 print("Yep, that's an acceptable link in the message")
                 return True
 
