@@ -46,19 +46,17 @@ def scrape_songlink(url):
         for link in soup.find_all('a'):
             if 'youtube.com' in link.get('href'):
                 print(link.get('href'))
-                link_found = True
                 return link.get('href')
             elif 'soundcloud.com' in link.get('href'):
                 print(link.get('href'))
-                link_found = True
                 return link.get('href')
         print("Couldn't find a YouTube/Soundcloud URL to download from")
-        return False
+        return
 
 # Respond to /start
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-                     text="This bot can send you .mp3's of YouTube videos.")
+                     text="This bot can send you .mp3's of videos.")
 
 
 # YouTube-dl stuff
@@ -121,6 +119,7 @@ def check_message_for_link(bot, update):
         media_url=update.message.text
         print(media_url)
 
+    # Grab YouTube/Soundcloud link from Song.link if it's a spotify or song.link URL
     if 'spotify.com' in update.message.text:
         print('song.linkifying spotify link')
         media_url=scrape_songlink('https://song.link/' + update.message.text)
@@ -130,11 +129,15 @@ def check_message_for_link(bot, update):
     else:
         print('Not a song.link or spotify URL, continuing to download song.')
 
-    if media_url is False:
-        bot.send_message(chat_id=update.message.chat_id,
-                         text="Couldn't find a YouTube/Soundcloud URL to download from.")
-    else:
+    # Download video/audio and covert to mp3
+    try:
         download_audio(media_url)
+        # Get song.link URL
+        media_url=scrape_songlink('https://song.link/' + update.message.text)
+    except Exception as e:
+        print('Exception: ' + str(e))
+        bot.send_message(chat_id=update.message.chat_id,
+                    text="Couldn't find a YouTube/Soundcloud URL to download from.")
 
     # Try to send telegram message with audio file. If error, try again in 5 sec.
     i = 0
