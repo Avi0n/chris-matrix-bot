@@ -123,11 +123,14 @@ def check_message_for_link(bot, update):
     if 'spotify.com' in update.message.text:
         print('song.linkifying spotify link')
         media_url=scrape_songlink('https://song.link/' + update.message.text)
+    elif 'music.apple.com' in update.message.text:
+        print('song.linkifying Apple Music link')
+        media_url=scrape_songlink('https://song.link/' + update.message.text)        
     elif 'song.link' in update.message.text:
         # Grab YouTube/Soundcloud URL from song.link URL
         media_url=scrape_songlink(update.message.text)
     else:
-        print('Not a song.link or spotify URL, continuing to download song.')
+        print('Not a song.link or spotify/apple URL, continuing to download song.')
 
     # Download video/audio and covert to mp3
     try:
@@ -170,6 +173,7 @@ class FilterLinks(BaseFilter):
             'youtu.be',
             'soundcloud.com',
             'spotify.com',
+            'music.apple.com',
             'coub.com',
             'song.link'
         ]
