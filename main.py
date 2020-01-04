@@ -104,7 +104,6 @@ def download_audio(url):
     for fname in os.listdir('.'):
         if fname.endswith('.mp3'):
             mp3_name = fname
-            #os.rename(fname, 'song.mp3')
             break
 
 
@@ -137,7 +136,7 @@ def check_message_for_link(update, context):
             try:
                 print(mp3_name)
                 context.bot.send_audio(chat_id=update.message.chat_id, audio=open(
-                    './' + mp3_name, 'rb'), title=mp3_name, disable_notification=True,
+                    './' + mp3_name, 'rb'), disable_notification=True,
                     caption='[Song.link URL](' + songlink_url + ')',
                     parse_mode='Markdown', timeout=20)
                 print('Telegram message sent!')
