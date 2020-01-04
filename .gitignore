@@ -2,3 +2,4 @@ env
 .env
 settings.json
 testing.py
+.cache/

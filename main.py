@@ -54,8 +54,8 @@ def scrape_songlink(url):
         return
 
 # Respond to /start
-def start(bot, update):
-    bot.send_message(chat_id=update.message.chat_id,
+def start(context, update):
+    context.bot.send_message(chat_id=update.message.chat_id,
                      text="This bot can send you .mp3's of videos.")
 
 
@@ -111,7 +111,7 @@ def delete_audio():
 # End of YouTube-dl stuffError
 
 
-def check_message_for_link(bot, update):
+def check_message_for_link(update, context):
     # Assign link in message or sticker to a variable
     media_url=''
 
@@ -139,7 +139,7 @@ def check_message_for_link(bot, update):
         media_url=scrape_songlink('https://odesli.co/' + update.message.text)
     except Exception as e:
         print('Exception: ' + str(e))
-        bot.send_message(chat_id=update.message.chat_id,
+        context.bot.send_message(chat_id=update.message.chat_id,
                     text="Couldn't find a YouTube/Soundcloud URL to download from.")
 
     # Try to send telegram message with audio file. If error, try again in 5 sec.
@@ -148,7 +148,7 @@ def check_message_for_link(bot, update):
     while i < 5:
         i += 1
         try:
-            bot.send_audio(chat_id=update.message.chat_id, audio=open(
+            context.bot.send_audio(chat_id=update.message.chat_id, audio=open(
                            './song.mp3', 'rb'), title=mp3_name, disable_notification=True, 
                            caption='[Song.link URL](' + songlink_url + ')', 
                            parse_mode='Markdown', timeout=20)
@@ -160,7 +160,7 @@ def check_message_for_link(bot, update):
             sleep(5)
             continue
     if i is 5:
-        bot.send_message(chat_id=update.message.chat_id, text=error, disable_notification=True)
+        context.bot.send_message(chat_id=update.message.chat_id, text=error, disable_notification=True)
 
     # All done! Delete audio file.
     delete_audio()
@@ -190,8 +190,7 @@ def main():
     filter_links=FilterLinks()
 
     # Set Chris bot token
-    updater=Updater(token=os.getenv('TEL_BOT_TOKEN'), request_kwargs={
-                      'read_timeout': 15, 'connect_timeout': 30})
+    updater = Updater(os.getenv('TEL_BOT_TOKEN'), use_context=True)
 
     dispatcher=updater.dispatcher
 
