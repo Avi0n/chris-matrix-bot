@@ -45,6 +45,7 @@ def get_song_download_url(url):
 
     youtube_url = json_data['linksByPlatform']['youtube']['url']
     soundcloud_url = json_data['linksByPlatform']['soundcloud']['url']
+    songlink_url = json_data['pageUrl']
 
     if youtube_url is not None:
         print(youtube_url)
