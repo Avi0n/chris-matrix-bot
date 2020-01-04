@@ -104,7 +104,7 @@ def download_audio(url):
     for fname in os.listdir('.'):
         if fname.endswith('.mp3'):
             mp3_name = fname
-            os.rename(fname, 'song.mp3')
+            #os.rename(fname, 'song.mp3')
             break
 
 
@@ -129,33 +129,31 @@ def check_message_for_link(update, context):
     try:
         print('download function url: ' + media_url)
         download_audio(media_url)
-        # Get song.link URL
-        media_url = get_song_download_url('https://odesli.co/' + update.message.text)
+        # Try to send telegram message with audio file. If error, try again in 5 sec.
+        i = 0
+        error = ''
+        while i < 5:
+            i += 1
+            try:
+                print(mp3_name)
+                context.bot.send_audio(chat_id=update.message.chat_id, audio=open(
+                    './' + mp3_name, 'rb'), title=mp3_name, disable_notification=True,
+                    caption='[Song.link URL](' + songlink_url + ')',
+                    parse_mode='Markdown', timeout=20)
+                print('Telegram message sent!')
+                break
+            except Exception as e:
+                error = str(e)
+                print('Exception: ' + str(e) + '. Trying again in 5 seconds')
+                sleep(5)
+                continue
+        if i == 5:
+            context.bot.send_message(
+                chat_id=update.message.chat_id, text=error, disable_notification=True)
     except Exception as e:
         print('Exception: ' + str(e))
         context.bot.send_message(chat_id=update.message.chat_id,
                                  text="Couldn't find a YouTube/Soundcloud URL to download from.")
-
-    # Try to send telegram message with audio file. If error, try again in 5 sec.
-    i = 0
-    error = ''
-    while i < 5:
-        i += 1
-        try:
-            context.bot.send_audio(chat_id=update.message.chat_id, audio=open(
-                './song.mp3', 'rb'), title=mp3_name, disable_notification=True,
-                caption='[Song.link URL](' + songlink_url + ')',
-                parse_mode='Markdown', timeout=20)
-            print('Telegram message sent!')
-            break
-        except Exception as e:
-            error = str(e)
-            print('Exception: ' + str(e) + '. Trying again in 5 seconds')
-            sleep(5)
-            continue
-    if i == 5:
-        context.bot.send_message(
-            chat_id=update.message.chat_id, text=error, disable_notification=True)
 
     # All done! Delete audio file.
     delete_audio()
