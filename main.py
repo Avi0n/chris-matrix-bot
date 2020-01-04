@@ -122,10 +122,10 @@ def check_message_for_link(bot, update):
     # Grab YouTube/Soundcloud link from Song.link if it's a spotify or song.link URL
     if 'spotify.com' in update.message.text:
         print('song.linkifying spotify link')
-        media_url=scrape_songlink('https://song.link/' + update.message.text)
+        media_url=scrape_songlink('https://odesli.co/' + update.message.text)
     elif 'music.apple.com' in update.message.text:
         print('song.linkifying Apple Music link')
-        media_url=scrape_songlink('https://song.link/' + update.message.text)        
+        media_url=scrape_songlink('https://odesli.co/' + update.message.text)        
     elif 'song.link' in update.message.text:
         # Grab YouTube/Soundcloud URL from song.link URL
         media_url=scrape_songlink(update.message.text)
@@ -136,7 +136,7 @@ def check_message_for_link(bot, update):
     try:
         download_audio(media_url)
         # Get song.link URL
-        media_url=scrape_songlink('https://song.link/' + update.message.text)
+        media_url=scrape_songlink('https://odesli.co/' + update.message.text)
     except Exception as e:
         print('Exception: ' + str(e))
         bot.send_message(chat_id=update.message.chat_id,
