@@ -36,16 +36,19 @@ def get_song_download_url(url):
     API_URL = "https://api.song.link/v1-alpha.1/links?"
 
     data = {
-        "url": "https://open.spotify.com/track/6pnVfCD8pWUb6GSu5OlBDn?si=ie6_8Xc1RlK1mrgPttvGyg",
+        "url": url,
         "userCountry": "US"
     }
 
     response = requests.get(API_URL, data)
     json_data = response.json()
 
-    youtube_url = json_data['linksByPlatform']['youtube']['url']
-    soundcloud_url = json_data['linksByPlatform']['soundcloud']['url']
-    songlink_url = json_data['pageUrl']
+    try:
+        youtube_url = json_data['linksByPlatform']['youtube']['url']
+        soundcloud_url = json_data['linksByPlatform']['soundcloud']['url']
+        songlink_url = json_data['pageUrl']
+    except:
+        print('YouTube or Soundcloud link not found')
 
     if youtube_url is not None:
         print(youtube_url)
@@ -164,6 +167,7 @@ class FilterLinks(BaseFilter):
         accepted_links = [
             'youtube.com',
             'youtu.be',
+            'play.google.com/music',
             'soundcloud.com',
             'spotify.com',
             'music.apple.com',

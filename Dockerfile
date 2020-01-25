@@ -5,7 +5,7 @@ MAINTAINER Avi0n
 COPY requirements.txt /tmp/
 
 RUN apk --no-cache add libressl-dev musl-dev libffi-dev build-base ffmpeg \
-&& pip install --no-cache-dir -r /tmp/requirements.txt
+&& pip install --no-cache-dir -U -r /tmp/requirements.txt
 
 RUN adduser -u 1000 -S appuser -h /home/appuser
 WORKDIR /home/appuser
