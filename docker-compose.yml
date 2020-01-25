@@ -1,0 +1,7 @@
+version: '3.1'
+
+services:
+  chris-telegram-bot:
+    restart: always
+    build: .
+    container_name: chris-telegram-bot

@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup
 from time import sleep
 from telegram.ext import (MessageHandler, CommandHandler, BaseFilter, Updater)
 import os
@@ -32,6 +31,7 @@ def get_song_download_url(url):
     youtube_url = ''
     soundcloud_url = ''
     global songlink_url
+    global song_title
 
     API_URL = "https://api.song.link/v1-alpha.1/links?"
 
@@ -47,6 +47,7 @@ def get_song_download_url(url):
         youtube_url = json_data['linksByPlatform']['youtube']['url']
         soundcloud_url = json_data['linksByPlatform']['soundcloud']['url']
         songlink_url = json_data['pageUrl']
+        song_title = list(json_data['entitiesByUniqueId'].values())[0]['title']
     except:
         print('YouTube or Soundcloud link not found')
 
@@ -107,7 +108,8 @@ def download_audio(url):
     # Find filename of converted audio
     for fname in os.listdir('.'):
         if fname.endswith('.mp3'):
-            mp3_name = fname
+            os.rename(fname, song_title + '.mp3')
+            mp3_name = song_title + '.mp3'
             break
 
 
@@ -117,7 +119,7 @@ def delete_audio():
         if fname.endswith('.mp3'):
             os.remove(fname)
 
-# End of YouTube-dl stuffError
+# End of YouTube-dl stuff
 
 
 def check_message_for_link(update, context):
