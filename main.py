@@ -51,12 +51,12 @@ def get_song_download_url(url):
     except:
         print('YouTube or Soundcloud link not found')
 
-    if youtube_url is not None:
-        print(youtube_url)
-        return youtube_url
-    elif soundcloud_url is not None:
+    if soundcloud_url is not None:
         print(soundcloud_url)
         return soundcloud_url
+    elif youtube_url is not None:
+        print(youtube_url)
+        return youtube_url
     else:
         print("Couldn't find a YouTube/Soundcloud URL to download from")
     return
@@ -132,7 +132,7 @@ def check_message_for_link(update, context):
 
     # Download video/audio and covert to mp3
     try:
-        print('download function url: ' + media_url)
+        print('Download function url: ' + media_url)
         download_audio(media_url)
         # Try to send telegram message with audio file. If error, try again in 5 sec.
         i = 0
