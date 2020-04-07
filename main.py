@@ -6,7 +6,7 @@ import os
 import logging
 import youtube_dl
 import requests
-
+import re
 
 # Initialize dotenv
 load_dotenv()
@@ -15,8 +15,9 @@ mp3_name = ''
 songlink_url = ''
 
 # Initialize logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +36,7 @@ def get_song_download_url(url):
 
     API_URL = "https://api.song.link/v1-alpha.1/links?"
 
-    data = {
-        "url": url,
-        "userCountry": "US"
-    }
+    data = {"url": url, "userCountry": "US"}
 
     response = requests.get(API_URL, data)
     json_data = response.json()
@@ -48,6 +46,8 @@ def get_song_download_url(url):
         soundcloud_url = json_data['linksByPlatform']['soundcloud']['url']
         songlink_url = json_data['pageUrl']
         song_title = list(json_data['entitiesByUniqueId'].values())[0]['title']
+        # Remove special characters
+        song_title = re.sub('\W+', ' ', song_title)
     except:
         print('YouTube or Soundcloud link not found')
 
@@ -89,13 +89,15 @@ def download_audio(url):
     global mp3_name
 
     ydl_opts = {
-        'format': 'bestaudio/best',
+        'format':
+        'bestaudio/best',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'logger': MyLogger(),
+        'logger':
+        MyLogger(),
         'progress_hooks': [my_hook],
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -119,8 +121,6 @@ def delete_audio():
         if fname.endswith('.mp3'):
             os.remove(fname)
 
-# End of YouTube-dl stuff
-
 
 def check_message_for_link(update, context):
     # Assign link in message or sticker to a variable
@@ -140,11 +140,13 @@ def check_message_for_link(update, context):
         while i < 5:
             i += 1
             try:
-                print(mp3_name)
-                context.bot.send_audio(chat_id=update.message.chat_id, audio=open(
-                    './' + mp3_name, 'rb'), disable_notification=True,
-                    caption='[Song.link URL](' + songlink_url + ')',
-                    parse_mode='Markdown', timeout=20)
+                context.bot.send_audio(chat_id=update.message.chat_id,
+                                       audio=open('./' + mp3_name, 'rb'),
+                                       disable_notification=True,
+                                       caption='[Song.link URL](' +
+                                       songlink_url + ')',
+                                       parse_mode='Markdown',
+                                       timeout=20)
                 print('Telegram message sent!')
                 break
             except Exception as e:
@@ -153,12 +155,13 @@ def check_message_for_link(update, context):
                 sleep(5)
                 continue
         if i == 5:
-            context.bot.send_message(
-                chat_id=update.message.chat_id, text=error, disable_notification=True)
+            context.bot.send_message(chat_id=update.message.chat_id,
+                                     text=error,
+                                     disable_notification=True)
     except Exception as e:
         print('Exception: ' + str(e))
-        context.bot.send_message(chat_id=update.message.chat_id,
-                                 text="Couldn't find a YouTube/Soundcloud URL to download from.")
+        context.bot.send_message(chat_id=update.message.chat_id, text=str(e))
+        #text="Couldn't find a YouTube/Soundcloud URL to download from.")
 
     # All done! Delete audio file.
     delete_audio()
@@ -167,13 +170,8 @@ def check_message_for_link(update, context):
 class FilterLinks(BaseFilter):
     def filter(self, message):
         accepted_links = [
-            'youtube.com',
-            'youtu.be',
-            'play.google.com/music',
-            'soundcloud.com',
-            'spotify.com',
-            'music.apple.com',
-            'coub.com',
+            'youtube.com', 'youtu.be', 'play.google.com/music',
+            'soundcloud.com', 'spotify.com', 'music.apple.com', 'coub.com',
             'song.link'
         ]
         media_url = message.text
