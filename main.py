@@ -7,6 +7,7 @@ import logging
 import youtube_dl
 import requests
 import re
+import json
 
 # Initialize dotenv
 load_dotenv()
@@ -40,22 +41,22 @@ def get_song_download_url(url):
 
     response = requests.get(API_URL, data)
     json_data = response.json()
-
     try:
-        youtube_url = json_data['linksByPlatform']['youtube']['url']
-        soundcloud_url = json_data['linksByPlatform']['soundcloud']['url']
+        if 'youtube' in str(json_data):
+            youtube_url = json_data['linksByPlatform']['youtube']['url']
+        if 'soundcloud' in str(json_data):
+            soundcloud_url = json_data['linksByPlatform']['soundcloud']['url']
         songlink_url = json_data['pageUrl']
         song_title = list(json_data['entitiesByUniqueId'].values())[0]['title']
         # Remove special characters
-        song_title = re.sub('\W+', ' ', song_title)
-    except:
-        print('YouTube or Soundcloud link not found')
+        song_title = re.sub(r'\W+', ' ', song_title)
+    except Exception as e:
+        print(str(e))
+        #print('YouTube or Soundcloud link not found')
 
-    if soundcloud_url is not None:
-        print(soundcloud_url)
+    if soundcloud_url is not '':
         return soundcloud_url
-    elif youtube_url is not None:
-        print(youtube_url)
+    elif youtube_url is not '':
         return youtube_url
     else:
         print("Couldn't find a YouTube/Soundcloud URL to download from")
@@ -89,20 +90,15 @@ def download_audio(url):
     global mp3_name
 
     ydl_opts = {
-        'format':
-        'bestaudio/best',
+        'format': 'bestaudio/best',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'logger':
-        MyLogger(),
+        'logger': MyLogger(),
         'progress_hooks': [my_hook],
     }
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download(['https://www.youtube.com/watch?v=BaW_jenozKc'])
-
     print('Downloading video and/or audio')
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
@@ -128,7 +124,6 @@ def check_message_for_link(update, context):
 
     if update.message.text is not None:
         media_url = get_song_download_url(update.message.text)
-        print(media_url)
 
     # Download video/audio and covert to mp3
     try:
@@ -151,6 +146,8 @@ def check_message_for_link(update, context):
                 break
             except Exception as e:
                 error = str(e)
+                if 'not a valid URL' in error:
+                    break
                 print('Exception: ' + str(e) + '. Trying again in 5 seconds')
                 sleep(5)
                 continue
