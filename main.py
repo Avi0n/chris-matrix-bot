@@ -51,7 +51,7 @@ def get_song_download_url(url):
         # Remove special characters
         song_title = re.sub(r'\W+', ' ', song_title)
     except Exception as e:
-        print(str(e))
+        print(f"Exception in get_song_download_url(): {str(e)}")
         #print('YouTube or Soundcloud link not found')
 
     if soundcloud_url is not '':
@@ -90,13 +90,15 @@ def download_audio(url):
     global mp3_name
 
     ydl_opts = {
-        'format': 'bestaudio/best',
+        'format':
+        'bestaudio/best',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'logger': MyLogger(),
+        'logger':
+        MyLogger(),
         'progress_hooks': [my_hook],
     }
     print('Downloading video and/or audio')
@@ -125,8 +127,14 @@ def check_message_for_link(update, context):
     if update.message.text is not None:
         media_url = get_song_download_url(update.message.text)
 
-    # Download video/audio and covert to mp3
+    # Give user status update
     try:
+        bot_message_id = context.bot.send_message(
+            chat_id=update.message.chat_id,
+            text="Downloading...",
+            disable_notification=True).message_id
+
+        # Download video/audio and covert to mp3
         print('Download function url: ' + media_url)
         download_audio(media_url)
         # Try to send telegram message with audio file. If error, try again in 5 sec.
@@ -135,6 +143,11 @@ def check_message_for_link(update, context):
         while i < 5:
             i += 1
             try:
+                print("Sending video")
+                context.bot.edit_message_text(chat_id=update.message.chat_id,
+                                              message_id=bot_message_id,
+                                              text="Sending...",
+                                              disable_notification=True)
                 context.bot.send_audio(chat_id=update.message.chat_id,
                                        audio=open('./' + mp3_name, 'rb'),
                                        disable_notification=True,
@@ -142,23 +155,52 @@ def check_message_for_link(update, context):
                                        songlink_url + ')',
                                        parse_mode='Markdown',
                                        timeout=20)
+                # Delete "Sending..." message
+                context.bot.delete_message(chat_id=update.message.chat_id,
+                                        message_id=bot_message_id)
                 print('Telegram message sent!')
                 break
             except Exception as e:
                 error = str(e)
-                if 'not a valid URL' in error:
+                if "not a valid URL" in error:
+                    print("Exception: " + str(e))
+                    # Delete "Sending..." message
+                    context.bot.delete_message(chat_id=update.message.chat_id,
+                                            message_id=bot_message_id)
                     break
-                print('Exception: ' + str(e) + '. Trying again in 5 seconds')
-                sleep(5)
-                continue
-        if i == 5:
+                elif "File too large" in error:
+                    print("Exception: " + str(e))
+                    # Delete "Sending..." message
+                    context.bot.delete_message(chat_id=update.message.chat_id,
+                                            message_id=bot_message_id)
+                    break
+                elif "Message is not modified" in error:
+                    print("Exception: " + str(e))
+                    # Delete "Sending..." message
+                    context.bot.delete_message(chat_id=update.message.chat_id,
+                                            message_id=bot_message_id)
+                    break
+                elif "No such file or directory" in error:
+                    print("Exception: " + str(e))
+                    # Delete "Sending..." message
+                    context.bot.delete_message(chat_id=update.message.chat_id,
+                                            message_id=bot_message_id)
+                    break
+                else:
+                    print('Exception: ' + str(e) + '. Trying again in 5 seconds')
+                    sleep(5)
+                    continue
+        if i == 4:
             context.bot.send_message(chat_id=update.message.chat_id,
                                      text=error,
                                      disable_notification=True)
     except Exception as e:
         print('Exception: ' + str(e))
-        context.bot.send_message(chat_id=update.message.chat_id, text=str(e))
-        #text="Couldn't find a YouTube/Soundcloud URL to download from.")
+        if 'can only concatenate str' in str(e):
+            context.bot.send_message(
+                chat_id=update.message.chat_id,
+                text="Couldn't find a YouTube/Soundcloud URL to download from."
+            )
 
     # All done! Delete audio file.
     delete_audio()
