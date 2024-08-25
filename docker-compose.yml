@@ -1,7 +1,9 @@
 version: '3.1'
 
 services:
-  chris-telegram-bot:
-    restart: always
+  chris-matrix-bot:
+    #restart: always
     build: .
-    container_name: chris-telegram-bot
+    container_name: chris-matrix-bot
+    volumes:
+      - ./bot/data:/opt/bot

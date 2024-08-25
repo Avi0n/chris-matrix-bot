@@ -1,0 +1,5 @@
+homeserver: "https://matrix.org"
+username: "bot_username"
+password: "hunter2"
+
+prefix: "!"
